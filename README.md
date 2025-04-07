@@ -6,7 +6,7 @@
 
 ## 技术选型
 
-![img](https://i-blog.csdnimg.cn/direct/9f0058c0637e463984d73d695b91582b.png)
+![img](C:\Users\victo\IdeaProjects\sky-take-out\技术选型.png)
 
 ### 用户层 
 
