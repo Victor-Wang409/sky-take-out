@@ -5,8 +5,7 @@
 这是一款为餐饮类企业定制的软件产品，分为管理端和用户端。实现用户端点单，管理端处理订单的简易外卖软件
 
 ## 技术选型
-
-![img](C:\Users\victo\IdeaProjects\sky-take-out\技术选型.png)
+![技术选型](https://github.com/user-attachments/assets/5e1c5ffe-d8cb-46b9-ae8b-1e528f321399)
 
 ### 用户层 
 
