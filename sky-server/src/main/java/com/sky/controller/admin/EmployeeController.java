@@ -12,6 +12,7 @@ import com.sky.result.Result;
 import com.sky.service.EmployeeService;
 import com.sky.utils.JwtUtil;
 import com.sky.vo.EmployeeLoginVO;
+import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -73,12 +74,14 @@ public class EmployeeController {
     }
 
     @GetMapping("/page")
+    @ApiOperation("员工分页查询")
     public Result<PageResult> findAllByPage(EmployeePageQueryDTO employeePageQueryDTO) {
         log.info("分页查询：{}", employeePageQueryDTO);
         return Result.success(employeeService.findAllByPage(employeePageQueryDTO));
     }
 
     @PostMapping
+    @ApiOperation("新增员工")
     public Result saveEmp(@RequestBody EmployeeDTO employeedto) {
         log.info("新增员工：{}", employeedto);
         employeeService.saveEmp(employeedto);
@@ -86,6 +89,7 @@ public class EmployeeController {
     }
 
     @PostMapping("/status/{status}")
+    @ApiOperation("启用禁用员工账号")
     public Result updateStatus(@PathVariable Integer status, Long id) {
         log.info("修改员工状态：{}", status);
         log.info("修改员工id：{}", id);
