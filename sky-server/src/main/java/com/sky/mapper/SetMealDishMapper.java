@@ -7,14 +7,28 @@ import org.apache.ibatis.annotations.Mapper;
 import java.util.List;
 
 @Mapper
-public interface SetMealDishMapper {
+public interface SetmealDishMapper {
+    /**
+     * 根据菜品id查询对应的套餐id
+     *
+     * @param dishIds
+     * @return
+     */
+    //select setmeal_id from setmeal_dish where dish_id in (1,2,3,4)
+    List<Long> getSetmealIdsByDishIds(List<Long> dishIds);
 
-    List<Long> findByDishIds(List<Long> ids);
+    /**
+     * 批量保存套餐和菜品的关联关系
+     *
+     * @param setmealDishes
+     */
+    void insertBatch(List<SetmealDish> setmealDishes);
 
-    void saveSetMealDish(List<SetmealDish> setMealDishes);
-
-    List<SetmealDish> findByDishId(Long id);
-
-    @Delete("DELETE FROM setmeal_dish WHERE setmeal_id = #{id}")
-    void deleteByDishId(Long id);
+    /**
+     * 根据套餐id删除套餐和菜品的关联关系
+     *
+     * @param setmealId
+     */
+    @Delete("delete from setmeal_dish where setmeal_id = #{setmealId}")
+    void deleteBySetmealId(Long setmealId);
 }

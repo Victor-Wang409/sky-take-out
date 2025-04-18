@@ -8,6 +8,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 
 
+/**
+ * 配置类，用于创建AliOssUtil对象
+ */
+
 @Configuration
 @Slf4j
 public class AliOSSConfiguration {

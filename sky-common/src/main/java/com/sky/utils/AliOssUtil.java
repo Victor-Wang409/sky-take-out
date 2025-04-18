@@ -1,17 +1,13 @@
 package com.sky.utils;
 
+import com.aliyun.oss.ClientException;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
-import com.aliyun.oss.common.auth.CredentialsProviderFactory;
-import com.aliyun.oss.common.auth.EnvironmentVariableCredentialsProvider;
+import com.aliyun.oss.OSSException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import java.io.ByteArrayInputStream;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
-
 
 @Data
 @AllArgsConstructor
@@ -19,46 +15,54 @@ import java.util.UUID;
 public class AliOssUtil {
 
     private String endpoint;
+    private String accessKeyId;
+    private String accessKeySecret;
     private String bucketName;
-    private String region;
-
-    /**
-     * 生成一个唯一的 Bucket 名称
-     */
-    public static String generateUniqueName(String prefix) {
-        // 获取当前时间
-        LocalDate timestamp = LocalDate.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd");
-        UUID uuid = UUID.randomUUID();
-        // 连接以形成一个唯一的 Bucket 名称
-        return timestamp.format(formatter) + "-" + uuid.toString().replace("-", "") + prefix;
-    }
 
     /**
      * 文件上传
      *
-     * @param content
+     * @param bytes
      * @param objectName
      * @return
      */
-    public String upload(byte[] content, String objectName) throws com.aliyuncs.exceptions.ClientException {
+    public String upload(byte[] bytes, String objectName) {
 
-        // 创建 OSSClient 实例
-        EnvironmentVariableCredentialsProvider credentialsProvider =
-                CredentialsProviderFactory.newEnvironmentVariableCredentialsProvider();
-        OSS ossClient = OSSClientBuilder.create()
-                .endpoint(endpoint)
-                .credentialsProvider(credentialsProvider)
-                .region(region)
-                .build();
+        // 创建OSSClient实例。
+        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
 
         try {
-            // 2. 上传文件
-            ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(content));
-            System.out.println("2. 文件 " + objectName + " 上传成功。");
+            // 创建PutObject请求。
+            ossClient.putObject(bucketName, objectName, new ByteArrayInputStream(bytes));
+        } catch (OSSException oe) {
+            System.out.println("Caught an OSSException, which means your request made it to OSS, "
+                    + "but was rejected with an error response for some reason.");
+            System.out.println("Error Message:" + oe.getErrorMessage());
+            System.out.println("Error Code:" + oe.getErrorCode());
+            System.out.println("Request ID:" + oe.getRequestId());
+            System.out.println("Host ID:" + oe.getHostId());
+        } catch (ClientException ce) {
+            System.out.println("Caught an ClientException, which means the client encountered "
+                    + "a serious internal problem while trying to communicate with OSS, "
+                    + "such as not being able to access the network.");
+            System.out.println("Error Message:" + ce.getMessage());
         } finally {
-            ossClient.shutdown();
+            if (ossClient != null) {
+                ossClient.shutdown();
+            }
         }
-        return endpoint.split("//")[0] + "//" + bucketName + "." + endpoint.split("//")[1] + "/" + objectName;
+
+        //文件访问路径规则 https://BucketName.Endpoint/ObjectName
+        StringBuilder stringBuilder = new StringBuilder("https://");
+        stringBuilder
+                .append(bucketName)
+                .append(".")
+                .append(endpoint)
+                .append("/")
+                .append(objectName);
+
+        log.info("文件上传到:{}", stringBuilder.toString());
+
+        return stringBuilder.toString();
     }
 }

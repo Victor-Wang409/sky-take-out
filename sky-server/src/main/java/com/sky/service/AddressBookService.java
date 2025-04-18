@@ -1,21 +1,20 @@
 package com.sky.service;
 
 import com.sky.entity.AddressBook;
-
 import java.util.List;
 
 public interface AddressBookService {
-    List<AddressBook> findAll();
 
-    List<AddressBook> findDefault(AddressBook addressBook);
+    List<AddressBook> list(AddressBook addressBook);
 
-    AddressBook findById(Long id);
+    void save(AddressBook addressBook);
 
-    void saveAddressBook(AddressBook addressBook);
+    AddressBook getById(Long id);
 
-    void updateAddressBook(AddressBook addressBook);
+    void update(AddressBook addressBook);
 
-    void updateAddressBookIsDefault(AddressBook addressBook);
+    void setDefault(AddressBook addressBook);
 
-    void deleteAddressBook(Long id);
+    void deleteById(Long id);
+
 }

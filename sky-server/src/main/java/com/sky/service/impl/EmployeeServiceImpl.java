@@ -9,11 +9,9 @@ import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.dto.EmployeePageQueryDTO;
-import com.sky.dto.PasswordEditDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
-import com.sky.exception.PasswordEditFailedException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
 import com.sky.result.PageResult;
@@ -52,7 +50,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         //密码比对
-        //进行md5加密，然后再进行比对
+        //对前端传过来的明文密码进行md5加密处理
         password = DigestUtils.md5DigestAsHex(password.getBytes());
         if (!password.equals(employee.getPassword())) {
             //密码错误
@@ -68,62 +66,98 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employee;
     }
 
-    @Override
-    public PageResult findAllByPage(EmployeePageQueryDTO employeePageQueryDTO) {
-        PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
-        List<Employee> employeeList = employeeMapper.findAllByPage(employeePageQueryDTO);
-        Page<Employee> p = (Page<Employee>) employeeList;
-        return new PageResult(p.getTotal(), p.getResult());
-    }
-
-    @Override
-    public void saveEmp(EmployeeDTO employeedto) {
+    /**
+     * 新增员工
+     *
+     * @param employeeDTO
+     */
+    public void save(EmployeeDTO employeeDTO) {
         Employee employee = new Employee();
-        BeanUtils.copyProperties(employeedto, employee);
+
+        //对象属性拷贝
+        BeanUtils.copyProperties(employeeDTO, employee);
+
+        //设置账号的状态，默认正常状态 1表示正常 0表示锁定
         employee.setStatus(StatusConstant.ENABLE);
+
+        //设置密码，默认密码123456
         employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
 
-        Long empId = BaseContext.getCurrentId();
+        //设置当前记录的创建时间和修改时间
+        //employee.setCreateTime(LocalDateTime.now());
+        //employee.setUpdateTime(LocalDateTime.now());
 
-        employeeMapper.saveEmp(employee);
+        //设置当前记录创建人id和修改人id
+        //employee.setCreateUser(BaseContext.getCurrentId());
+        //employee.setUpdateUser(BaseContext.getCurrentId());
+
+        employeeMapper.insert(employee);
     }
 
-    @Override
-    public void updateStatus(Integer status, Long id) {
+    /**
+     * 分页查询
+     *
+     * @param employeePageQueryDTO
+     * @return
+     */
+    public PageResult pageQuery(EmployeePageQueryDTO employeePageQueryDTO) {
+        // select * from employee limit 0,10
+        //开始分页查询
+        PageHelper.startPage(employeePageQueryDTO.getPage(), employeePageQueryDTO.getPageSize());
+
+        Page<Employee> page = employeeMapper.pageQuery(employeePageQueryDTO);
+
+        long total = page.getTotal();
+        List<Employee> records = page.getResult();
+
+        return new PageResult(total, records);
+    }
+
+    /**
+     * 启用禁用员工账号
+     *
+     * @param status
+     * @param id
+     */
+    public void startOrStop(Integer status, Long id) {
+        // update employee set status = ? where id = ?
+
+        /*Employee employee = new Employee();
+        employee.setStatus(status);
+        employee.setId(id);*/
+
         Employee employee = Employee.builder()
-                .id(id)
                 .status(status)
+                .id(id)
                 .build();
-        employeeMapper.updateEmp(employee);
+
+        employeeMapper.update(employee);
     }
 
-    @Override
-    public void updateEmp(EmployeeDTO employeeDTO) {
+    /**
+     * 根据id查询员工
+     *
+     * @param id
+     * @return
+     */
+    public Employee getById(Long id) {
+        Employee employee = employeeMapper.getById(id);
+        employee.setPassword("****");
+        return employee;
+    }
+
+    /**
+     * 编辑员工信息
+     *
+     * @param employeeDTO
+     */
+    public void update(EmployeeDTO employeeDTO) {
         Employee employee = new Employee();
         BeanUtils.copyProperties(employeeDTO, employee);
-        employeeMapper.updateEmp(employee);
-    }
 
-    @Override
-    public Employee findById(Long id) {
-        return employeeMapper.findById(id);
-    }
+        //employee.setUpdateTime(LocalDateTime.now());
+        //employee.setUpdateUser(BaseContext.getCurrentId());
 
-    @Override
-    public void updatePassword(PasswordEditDTO passwordEditDTO) {
-        passwordEditDTO.setEmpId(BaseContext.getCurrentId());
-        String oldPassword = employeeMapper.findById(passwordEditDTO.getEmpId()).getPassword();
-        if (!DigestUtils.md5DigestAsHex(passwordEditDTO.getOldPassword().getBytes()).equals(oldPassword)) {
-            throw new PasswordEditFailedException(MessageConstant.PASSWORD_EDIT_FAILED);
-        } else if (passwordEditDTO.getNewPassword().equals(passwordEditDTO.getOldPassword())) {
-            throw new PasswordEditFailedException(MessageConstant.PASSWORD_SAME);
-        } else {
-            Employee employee = Employee.builder()
-                    .id(passwordEditDTO.getEmpId())
-                    .password(DigestUtils.md5DigestAsHex(passwordEditDTO.getNewPassword().getBytes()))
-                    .build();
-            employeeMapper.updateEmp(employee);
-        }
+        employeeMapper.update(employee);
     }
-
 }
